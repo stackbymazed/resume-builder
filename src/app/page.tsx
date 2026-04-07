@@ -77,10 +77,48 @@ export default function ResumeBuilder() {
 
   const [isClient, setIsClient] = useState(false);
   const componentRef = useRef(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [spellErrors, setSpellErrors] = useState<any[]>([]);
+  const [hasChecked, setHasChecked] = useState(false);
+  const [showSpellModal, setShowSpellModal] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const checkSpelling = async () => {
+    setIsChecking(true);
+    setHasChecked(false);
+    
+    // Aggregate text
+    let textToCheck = `Objective:\n${data.objective}\n\n`;
+    data.projects.forEach((p, i) => {
+        textToCheck += `Project ${i+1}:\n${p.shortDesc}\n${p.features}\n\n`;
+    });
+
+    try {
+        const res = await fetch('/api/spellcheck', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: textToCheck })
+        });
+        const json = await res.json();
+        
+        if (json.matches) {
+           setSpellErrors(json.matches);
+        } else {
+           setSpellErrors([]);
+        }
+    } catch(e) {
+        console.error(e);
+        setSpellErrors([]);
+        alert("Failed to connect to spell check service.");
+    } finally {
+        setIsChecking(false);
+        setHasChecked(true);
+        setShowSpellModal(true);
+    }
+  };
 
   const printDocument = useReactToPrint({
     contentRef: componentRef,
@@ -132,11 +170,21 @@ export default function ResumeBuilder() {
     <div className="flex flex-col h-screen overflow-hidden">
       
       {/* Global Sticky Banner */}
-      <div className="bg-amber-100 border-b-2 border-amber-300 px-4 py-2.5 text-center text-[13px] md:text-sm text-amber-900 shadow-sm z-50 flex justify-center items-center gap-2">
+      <div className="bg-amber-100 border-b-2 border-amber-300 px-4 py-2.5 text-center text-[13px] md:text-sm text-amber-900 shadow-sm z-50 flex justify-center items-center gap-3 flex-wrap">
         <span className="text-lg">📢</span>
         <span>
-          <strong>Typo Alert System:</strong> Spell-checking is live! Mistakes are <span className="underline decoration-red-500 decoration-wavy font-bold">underlined in red</span>. Right-click to fix them before downloading!
+          <strong>Typo Check System:</strong> Let's make sure your resume is flawless before downloading!
         </span>
+        <button 
+          onClick={() => {
+            if(hasChecked && !isChecking) setShowSpellModal(true);
+            else checkSpelling();
+          }} 
+          className="ml-2 bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-md text-xs font-bold transition flex items-center gap-1 shadow-sm"
+          disabled={isChecking}
+        >
+          {isChecking ? "Scanning..." : hasChecked ? `View Results (${spellErrors.length} found)` : "Scan Resume (AI)"}
+        </button>
       </div>
 
       <div className="bg-slate-100 flex flex-col md:flex-row font-sans flex-1 overflow-hidden">
@@ -190,6 +238,47 @@ export default function ResumeBuilder() {
           .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         `}} />
       </div>
+      {/* Spell Check Modal */}
+      {showSpellModal && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-slate-50">
+               <h3 className="font-bold text-lg flex items-center gap-2">
+                 {spellErrors.length === 0 ? "✅ No Typos Found!" : `🚨 ${spellErrors.length} Typos / Grammar Issues Found`}
+               </h3>
+               <button onClick={() => setShowSpellModal(false)} className="text-gray-500 hover:text-black font-bold text-2xl px-2 leading-none">&times;</button>
+            </div>
+            <div className="p-4 overflow-y-auto custom-scrollbar flex-1 bg-slate-50">
+               {spellErrors.length === 0 ? (
+                 <div className="text-center py-10 text-emerald-600 font-medium bg-emerald-50 rounded-lg border border-emerald-200">Your resume text looks incredibly professional and error-free!</div>
+               ) : (
+                 <div className="space-y-4">
+                   <p className="text-sm text-slate-700 bg-white p-3 rounded-lg shadow-sm border border-slate-200 font-medium">We found the following issues in your text. Review the suggestions and manually fix them in the left-side form!</p>
+                   {spellErrors.map((err, i) => (
+                     <div key={i} className="bg-white p-3 rounded-lg border-l-4 border-l-red-500 border-t border-r border-b border-gray-200 shadow-sm">
+                        <p className="text-red-700 font-bold text-[14px] mb-1">{err.message}</p>
+                        <p className="text-gray-600 text-[13px] bg-gray-50 p-2 rounded mb-2 font-mono">"...{err.context.text}..."</p>
+                        {err.replacements && err.replacements.length > 0 && (
+                          <div className="text-[13px] flex gap-2 items-center flex-wrap">
+                             <span className="font-semibold text-emerald-700 flex items-center gap-1">✨ Suggestions: </span>
+                             {err.replacements.slice(0,3).map((r:any, idx:number) => (
+                               <span key={idx} className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium border border-emerald-200">{r.value}</span>
+                             ))}
+                          </div>
+                        )}
+                     </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+            <div className="p-4 border-t border-gray-200 flex justify-end gap-3 bg-white">
+               <button onClick={checkSpelling} className="px-5 py-2 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">Re-scan</button>
+               <button onClick={() => setShowSpellModal(false)} className="px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-md transition">Close & Fix Typos</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
