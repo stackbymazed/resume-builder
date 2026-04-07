@@ -119,7 +119,14 @@ export default function ResumeBuilder() {
     setData({ ...data, [section]: list.filter((item) => item.id !== id) });
   };
 
-  if (!isClient) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse">Loading Workspace...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans overflow-hidden">
