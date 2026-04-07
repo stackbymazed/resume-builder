@@ -17,14 +17,6 @@ export default function ResumeForm({ data, setData, updatePersonal, handleAdd, h
   return (
     <div className="space-y-6 pb-10">
       
-      {/* Spell Check Alert Banner */}
-      <div className="bg-amber-50 border-l-4 border-amber-500 p-3.5 rounded-r-lg shadow-sm text-amber-900 text-sm flex gap-3 items-start animate-pulse">
-        <AlertCircle size={20} className="text-amber-500 shrink-0 mt-0.5" />
-        <p className="leading-snug">
-          <strong>Smart Typo Alert:</strong> Strict spell-checking is enabled. If you make a spelling mistake, the browser will <span className="underline decoration-red-500 decoration-wavy font-medium">underline it in red</span>. Right-click the red lines to fix errors before downloading!
-        </p>
-      </div>
-
       {/* Personal Info */}
       <section className="bg-slate-50 p-4 rounded-xl border border-slate-200">
         <h2 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">Personal Details</h2>

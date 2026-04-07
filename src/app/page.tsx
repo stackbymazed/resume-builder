@@ -129,56 +129,67 @@ export default function ResumeBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden">
+      
+      {/* Global Sticky Banner */}
+      <div className="bg-amber-100 border-b-2 border-amber-300 px-4 py-2.5 text-center text-[13px] md:text-sm text-amber-900 shadow-sm z-50 flex justify-center items-center gap-2">
+        <span className="text-lg">📢</span>
+        <span>
+          <strong>Typo Alert System:</strong> Spell-checking is live! Mistakes are <span className="underline decoration-red-500 decoration-wavy font-bold">underlined in red</span>. Right-click to fix them before downloading!
+        </span>
+      </div>
 
-      {/* Left Sidebar - Form */}
-      <div className="w-full md:w-1/2 lg:w-5/12 h-screen overflow-y-auto bg-white border-r border-slate-200 p-6 shadow-md custom-scrollbar">
-        <div className="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 py-3 border-b shadow-sm -mx-6 px-6">
-          <h1 className="text-xl font-bold text-slate-800">Resume Creator</h1>
-          <div className="flex gap-2">
-            <button onClick={handleSaveToLocal} className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="Save Data">
-              <Save size={20} />
-            </button>
-            <button onClick={handleLoadFromLocal} className="p-2 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100" title="Load Data">
-              <Upload size={20} />
+      <div className="bg-slate-100 flex flex-col md:flex-row font-sans flex-1 overflow-hidden">
+        
+        {/* Left Sidebar - Form */}
+        <div className="w-full md:w-1/2 lg:w-5/12 h-full overflow-y-auto bg-white border-r border-slate-200 p-6 shadow-md custom-scrollbar">
+          <div className="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 py-3 border-b shadow-sm -mx-6 px-6">
+            <h1 className="text-xl font-bold text-slate-800">Resume Creator</h1>
+            <div className="flex gap-2">
+              <button onClick={handleSaveToLocal} className="p-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="Save Data">
+                <Save size={20} />
+              </button>
+              <button onClick={handleLoadFromLocal} className="p-2 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100" title="Load Data">
+                <Upload size={20} />
+              </button>
+            </div>
+          </div>
+
+          <ResumeForm
+            data={data}
+            setData={setData}
+            updatePersonal={updatePersonal}
+            handleAdd={handleAdd}
+            handleUpdate={handleUpdate}
+            handleRemove={handleRemove}
+          />
+
+        </div>
+
+        {/* Right Sidebar - Live Preview */}
+        <div className="w-full md:w-1/2 lg:w-7/12 bg-slate-200 h-full overflow-y-auto p-4 md:p-8 flex flex-col items-center custom-scrollbar">
+          
+          <div className="w-full max-w-[210mm] flex justify-between items-center mb-6 sticky top-0 z-10 bg-slate-200/90 backdrop-blur-sm py-2 px-1 rounded">
+            <p className="text-slate-500 font-medium text-sm flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Classic ATS Template</p>
+            <button onClick={printDocument} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-all shadow-lg hover:shadow-indigo-500/30">
+              <Download size={18} />
+              Download PDF
             </button>
           </div>
+
+          <ResumePreview data={data} contentRef={componentRef} />
+
         </div>
-
-        <ResumeForm
-          data={data}
-          setData={setData}
-          updatePersonal={updatePersonal}
-          handleAdd={handleAdd}
-          handleUpdate={handleUpdate}
-          handleRemove={handleRemove}
-        />
-
+        
+        {/* Scrollbar styling */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        `}} />
       </div>
-
-      {/* Right Sidebar - Live Preview */}
-      <div className="w-full md:w-1/2 lg:w-7/12 bg-slate-200 h-screen overflow-y-auto p-4 md:p-8 flex flex-col items-center custom-scrollbar">
-
-        <div className="w-full max-w-[210mm] flex justify-between items-center mb-6 sticky top-0 z-10 bg-slate-200/90 backdrop-blur-sm py-2 px-1">
-          <p className="text-slate-500 font-medium text-sm flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Classic ATS Template</p>
-          <button onClick={printDocument} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-all shadow-lg hover:shadow-indigo-500/30">
-            <Download size={18} />
-            Download PDF
-          </button>
-        </div>
-
-        <ResumePreview data={data} contentRef={componentRef} />
-
-      </div>
-
-      {/* Scrollbar styling */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-      `}} />
     </div>
   );
 }
