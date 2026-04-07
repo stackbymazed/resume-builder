@@ -1,5 +1,5 @@
-import React from "react";
-import { Plus, Trash2, AlertCircle } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, Trash2, AlertCircle, Wand2, Loader2 } from "lucide-react";
 import { ResumeData } from "@/types/resume";
 
 const INPUT_CLASS = "w-full px-3 py-2 text-[14px] border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all";
@@ -14,6 +14,34 @@ interface Props {
 }
 
 export default function ResumeForm({ data, setData, updatePersonal, handleAdd, handleUpdate, handleRemove }: Props) {
+  const [generatingField, setGeneratingField] = useState<string | null>(null);
+
+  const handleAIGenerate = async (type: "objective" | "shortDesc" | "features", id: string | null, currentText: string) => {
+      setGeneratingField(`${type}-${id}`);
+      try {
+          const res = await fetch('/api/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type, currentText: currentText || "Frontend developer looking for new opportunities" })
+          });
+          const json = await res.json();
+          
+          if(json.error) {
+              alert("AI Error:\n" + json.error);
+              return;
+          }
+
+          if (type === "objective") {
+             setData((prev) => ({ ...prev, objective: json.text }));
+          } else if (id && (type === "shortDesc" || type === "features")) {
+             handleUpdate("projects", id, type, json.text);
+          }
+      } catch (e) {
+          alert("Failed to connect to AI server.");
+      } finally {
+          setGeneratingField(null);
+      }
+  };
   return (
     <div className="space-y-6 pb-10">
       
@@ -34,7 +62,17 @@ export default function ResumeForm({ data, setData, updatePersonal, handleAdd, h
 
       {/* Career Objective */}
       <section className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-        <h2 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider">Career Objective</h2>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Career Objective</h2>
+          <button 
+            onClick={() => handleAIGenerate("objective", null, data.objective)}
+            disabled={generatingField === "objective-null"}
+            className="text-xs flex items-center bg-indigo-50 text-indigo-700 px-2 py-1.5 border border-indigo-200 font-bold rounded-md hover:bg-indigo-100 transition shadow-sm"
+          >
+            {generatingField === "objective-null" ? <Loader2 size={14} className="mr-1 animate-spin" /> : <Wand2 size={14} className="mr-1" />}
+            AI Write
+          </button>
+        </div>
         <textarea
           spellCheck={true}
           value={data.objective}
@@ -85,8 +123,30 @@ export default function ResumeForm({ data, setData, updatePersonal, handleAdd, h
                 <input spellCheck={false} type="text" value={proj.client} onChange={(e) => handleUpdate("projects", proj.id, "client", e.target.value)} placeholder="Client Repo URL" className={INPUT_CLASS} />
                 <input spellCheck={false} type="text" value={proj.server} onChange={(e) => handleUpdate("projects", proj.id, "server", e.target.value)} placeholder="Server Repo URL" className={INPUT_CLASS} />
               </div>
-              <textarea spellCheck={true} value={proj.shortDesc} onChange={(e) => handleUpdate("projects", proj.id, "shortDesc", e.target.value)} placeholder="Short Description" className={`${INPUT_CLASS} min-h-[50px] mb-2`} />
-              <textarea spellCheck={true} value={proj.features} onChange={(e) => handleUpdate("projects", proj.id, "features", e.target.value)} placeholder="Bullet Points (separated by new line)" className={`${INPUT_CLASS} min-h-[80px]`} />
+              
+              <div className="relative mb-2">
+                 <button 
+                  onClick={() => handleAIGenerate("shortDesc", proj.id, proj.shortDesc)}
+                  disabled={generatingField === `shortDesc-${proj.id}`}
+                  className="absolute right-2 top-2 z-10 text-[10px] flex items-center bg-indigo-100 text-indigo-700 px-1.5 py-1 border border-indigo-200 font-bold rounded hover:bg-indigo-200 transition"
+                 >
+                   {generatingField === `shortDesc-${proj.id}` ? <Loader2 size={12} className="mr-1 animate-spin" /> : <Wand2 size={12} className="mr-1" />}
+                   Magic Re-write
+                 </button>
+                 <textarea spellCheck={true} value={proj.shortDesc} onChange={(e) => handleUpdate("projects", proj.id, "shortDesc", e.target.value)} placeholder="Short Description" className={`${INPUT_CLASS} min-h-[60px] pb-6`} />
+              </div>
+
+              <div className="relative">
+                 <button 
+                  onClick={() => handleAIGenerate("features", proj.id, proj.features)}
+                  disabled={generatingField === `features-${proj.id}`}
+                  className="absolute right-2 top-2 z-10 text-[10px] flex items-center bg-indigo-100 text-indigo-700 px-1.5 py-1 border border-indigo-200 font-bold rounded hover:bg-indigo-200 transition"
+                 >
+                   {generatingField === `features-${proj.id}` ? <Loader2 size={12} className="mr-1 animate-spin" /> : <Wand2 size={12} className="mr-1" />}
+                   Enhance Bullet Points
+                 </button>
+                 <textarea spellCheck={true} value={proj.features} onChange={(e) => handleUpdate("projects", proj.id, "features", e.target.value)} placeholder="Bullet Points (separated by new line)" className={`${INPUT_CLASS} min-h-[100px] pb-6`} />
+              </div>
             </div>
           ))}
         </div>
